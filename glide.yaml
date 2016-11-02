@@ -1,0 +1,10 @@
+package: github.com/felipejfc/k8s-oidc-auth-builder
+import:
+- package: github.com/Sirupsen/logrus
+  version: ^0.10.0
+- package: github.com/labstack/echo
+  version: ^2.1
+  subpackages:
+  - engine
+  - engine/standard
+- package: github.com/spf13/cobra
