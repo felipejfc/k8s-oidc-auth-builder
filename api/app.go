@@ -24,8 +24,8 @@ package api
 
 import (
 	"fmt"
-	"net/http"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/engine/standard"
 )
@@ -33,16 +33,19 @@ import (
 // API the api struct that will keep config
 type API struct {
 	Port         int
-	clientID     string
-	clientSecret string
+	ClientID     string
+	ClientSecret string
 	HTTP         *echo.Echo
 }
 
-func (a *API) startAPI() {
+// Start starts the api
+func (a *API) Start() {
 	a.HTTP = echo.New()
 	h := a.HTTP
 
-	h.GET("/", GetGoogleLoginURL)
+	h.GET("/oidcurl", a.GetGoogleLoginURL)
+	h.GET("/kubeconfig/:code", a.GetKubeConfig)
 
+	log.Infof("API listening at port %d", a.Port)
 	h.Run(standard.New(fmt.Sprintf(":%d", a.Port)))
 }

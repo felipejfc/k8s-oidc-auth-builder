@@ -20,25 +20,10 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package api
+package main
 
-import (
-	"fmt"
-	"net/http"
+import "github.com/felipejfc/k8s-oidc-auth-builder/cmd"
 
-	"github.com/labstack/echo"
-)
-
-const oauthURL = "https://accounts.google.com/o/oauth2/auth?redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=code&client_id=%s&scope=openid+email+profile&approval_prompt=force&access_type=offline"
-
-// GetGoogleLoginURL will return the url for the user to login to google
-func (a *API) GetGoogleLoginURL(c echo.Context) error {
-	return c.String(http.StatusOK, fmt.Sprintf(oauthURL, a.ClientID))
-}
-
-// GetKubeConfig will return a kubeconfig with the user configured
-func (a *API) GetKubeConfig(c echo.Context) error {
-	//code := c.Param("code")
-
-	return nil
+func main() {
+	cmd.Execute()
 }
