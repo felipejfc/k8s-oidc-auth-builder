@@ -26,6 +26,8 @@ import (
 	"fmt"
 	"net/http"
 
+	log "github.com/Sirupsen/logrus"
+	"github.com/felipejfc/k8s-oidc-auth-builder/oidc"
 	"github.com/labstack/echo"
 )
 
@@ -37,8 +39,36 @@ func (a *API) GetGoogleLoginURL(c echo.Context) error {
 }
 
 // GetKubeConfig will return a kubeconfig with the user configured
-func (a *API) GetKubeConfig(c echo.Context) error {
-	//code := c.Param("code")
+func (a *API) GetKubeConfig(clientID string, clientSecret string) func(c echo.Context) error {
+	return func(c echo.Context) error {
+		code := c.FormValue("code")
+		log.Infof("Getting tokens with code %s", code)
+		tokens, err := oidc.GetTokens(clientID, clientSecret, code)
 
-	return nil
+		if err != nil {
+			return c.String(http.StatusBadRequest, fmt.Sprintf(`{"success":false,"reason":"%s"}`, err.Error()))
+		}
+
+		if tokens.AccessToken == "" {
+			return c.String(http.StatusForbidden, fmt.Sprintf(`{"success":false,"reason":"%s"}`, "not authorized"))
+		}
+
+		log.Debugf("Successfully got tokens AccessToken=%s, IDToken=%s, RefreshToken=%s", tokens.AccessToken, tokens.IDToken, tokens.RefreshToken)
+
+		email, err := oidc.GetEmail(tokens.AccessToken)
+
+		if err != nil {
+			return c.String(http.StatusBadRequest, fmt.Sprintf(`{"success":false,"reason":"%s"}`, err.Error()))
+		}
+
+		if email == "" {
+			return c.String(http.StatusBadRequest, fmt.Sprintf(`{"success":false,"reason":"%s"}`, "could not get user email"))
+		}
+
+		log.Debugf("Successfully got email %s", email)
+
+		user := oidc.GenerateUser(email, clientID, clientSecret, tokens.IDToken, tokens.RefreshToken)
+
+		return c.JSON(http.StatusCreated, user)
+	}
 }

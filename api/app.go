@@ -44,7 +44,7 @@ func (a *API) Start() {
 	h := a.HTTP
 
 	h.GET("/oidcurl", a.GetGoogleLoginURL)
-	h.GET("/kubeconfig/:code", a.GetKubeConfig)
+	h.POST("/kubeconfig", a.GetKubeConfig(a.ClientID, a.ClientSecret))
 
 	log.Infof("API listening at port %d", a.Port)
 	h.Run(standard.New(fmt.Sprintf(":%d", a.Port)))
