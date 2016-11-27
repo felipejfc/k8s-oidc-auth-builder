@@ -65,6 +65,40 @@ type APConfig struct {
 	RefreshToken string `yaml:"refresh-token"`
 }
 
+// KubectlCluster is a struct to help build kubeconfig file
+type KubectlCluster struct {
+	Cluster *KubectlClusterData `yaml:"cluster"`
+	Name    string              `yaml:"name"`
+}
+
+// KubectlClusterData is a struct to help build kubeconfig file
+type KubectlClusterData struct {
+	CertificateAuthorityData string `yaml:"certificate-authority-data"`
+	Server                   string `yaml:"server"`
+}
+
+// KubectlContext is a struct to help buil kubeconfig file
+type KubectlContext struct {
+	Context *KubectlContextData `yaml:"context"`
+	Name    string              `yaml:"name"`
+}
+
+// KubectlContextData is a struct to help buil kubeconfig file
+type KubectlContextData struct {
+	Cluster string `yaml:"cluster"`
+	User    string `yaml:"user"`
+}
+
+// KubectlConfig is a struct to help build kubeconfig file
+type KubectlConfig struct {
+	APIVersion     string            `yaml:"apiVersion"`
+	Clusters       []*KubectlCluster `yaml:"clusters"`
+	Contexts       []*KubectlContext `yaml:"contexts"`
+	CurrentContext string            `yaml:"current-context"`
+	Kind           string            `yaml:"kind"`
+	Users          []*KubectlUser    `yaml:"users"`
+}
+
 // UserInfo  is the result of GetEmail
 type UserInfo struct {
 	Email string `json:"email"`
@@ -90,6 +124,32 @@ func GetTokens(clientID, clientSecret, code string) (*TokenResponse, error) {
 		return nil, err
 	}
 	return tr, nil
+}
+
+// GenerateKubectlConfig generates a kubeconfig with cluster, context and user configured
+func GenerateKubectlConfig(apiVersion string, kubeAPI string, kubeCA string, environment string, user *KubectlUser) *KubectlConfig {
+	cluster := &KubectlCluster{
+		Name: environment,
+		Cluster: &KubectlClusterData{
+			Server: kubeAPI,
+			CertificateAuthorityData: kubeCA,
+		},
+	}
+	context := &KubectlContext{
+		Name: cluster.Name,
+		Context: &KubectlContextData{
+			Cluster: cluster.Name,
+			User:    user.Name,
+		},
+	}
+	return &KubectlConfig{
+		APIVersion:     apiVersion,
+		Clusters:       []*KubectlCluster{cluster},
+		Contexts:       []*KubectlContext{context},
+		CurrentContext: cluster.Name,
+		Kind:           "Config",
+		Users:          []*KubectlUser{user},
+	}
 }
 
 // GenerateUser generate a kubeconfig user

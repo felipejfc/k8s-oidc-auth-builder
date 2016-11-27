@@ -33,8 +33,10 @@ import (
 var port int
 var clientID string
 var clientSecret string
+var apiVersion string
 var kubeAPI string
 var kubeCA string
+var environment string
 
 func configureLogger(debug bool) {
 	log.SetOutput(os.Stderr)
@@ -63,6 +65,10 @@ var startCmd = &cobra.Command{
 			Port:         port,
 			ClientID:     clientID,
 			ClientSecret: clientSecret,
+			APIVersion:   apiVersion,
+			KubeAPI:      kubeAPI,
+			KubeCA:       kubeCA,
+			Environment:  environment,
 		}
 		api.Start()
 	},
@@ -74,5 +80,7 @@ func init() {
 	startCmd.Flags().StringVarP(&clientID, "clientID", "c", "", "The ClientID for the application")
 	startCmd.Flags().StringVarP(&clientSecret, "clientSecret", "s", "", "The Client Secret for the application")
 	startCmd.Flags().StringVarP(&kubeAPI, "kubeAPI", "k", "", "The kubernetes api address")
+	startCmd.Flags().StringVarP(&apiVersion, "apiVersion", "V", "v1", "The kubernetes api version")
 	startCmd.Flags().StringVarP(&kubeCA, "kubeCA", "a", "", "The kubernetes api certificate authority")
+	startCmd.Flags().StringVarP(&environment, "environment", "e", "staging", "The environment that the program will run")
 }

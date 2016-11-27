@@ -29,6 +29,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/felipejfc/k8s-oidc-auth-builder/oidc"
 	"github.com/labstack/echo"
+	yaml "gopkg.in/yaml.v2"
 )
 
 const oauthURL = "https://accounts.google.com/o/oauth2/auth?redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=code&client_id=%s&scope=openid+email+profile&approval_prompt=force&access_type=offline"
@@ -39,7 +40,7 @@ func (a *API) GetGoogleLoginURL(c echo.Context) error {
 }
 
 // GetKubeConfig will return a kubeconfig with the user configured
-func (a *API) GetKubeConfig(clientID string, clientSecret string) func(c echo.Context) error {
+func (a *API) GetKubeConfig(apiVersion string, kubeCA string, kubeAPI string, environment string, clientID string, clientSecret string) func(c echo.Context) error {
 	return func(c echo.Context) error {
 		code := c.FormValue("code")
 		log.Infof("Getting tokens with code %s", code)
@@ -69,6 +70,15 @@ func (a *API) GetKubeConfig(clientID string, clientSecret string) func(c echo.Co
 
 		user := oidc.GenerateUser(email, clientID, clientSecret, tokens.IDToken, tokens.RefreshToken)
 
-		return c.JSON(http.StatusCreated, user)
+		log.Debugf("Successfully generated user")
+
+		kubectlConfig := oidc.GenerateKubectlConfig(apiVersion, kubeAPI, kubeCA, environment, user)
+
+		response, err := yaml.Marshal(kubectlConfig)
+		if err != nil {
+			return c.String(http.StatusInternalServerError, fmt.Sprintf(`{"success":false, "reason":"%s"}`, err.Error()))
+		}
+		log.Debugf("Successfully generated user")
+		return c.String(http.StatusCreated, string(response))
 	}
 }

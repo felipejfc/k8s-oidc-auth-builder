@@ -26,16 +26,22 @@ import (
 	"fmt"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/felipejfc/k8s-oidc-auth-builder/oidc"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/engine/standard"
 )
 
 // API the api struct that will keep config
 type API struct {
-	Port         int
-	ClientID     string
-	ClientSecret string
-	HTTP         *echo.Echo
+	Port          int
+	ClientID      string
+	ClientSecret  string
+	APIVersion    string
+	KubeAPI       string
+	KubeCA        string
+	Environment   string
+	ClusterConfig *oidc.KubectlCluster
+	HTTP          *echo.Echo
 }
 
 // Start starts the api
@@ -44,7 +50,7 @@ func (a *API) Start() {
 	h := a.HTTP
 
 	h.GET("/oidcurl", a.GetGoogleLoginURL)
-	h.POST("/kubeconfig", a.GetKubeConfig(a.ClientID, a.ClientSecret))
+	h.POST("/kubeconfig", a.GetKubeConfig(a.APIVersion, a.KubeCA, a.KubeAPI, a.Environment, a.ClientID, a.ClientSecret))
 
 	log.Infof("API listening at port %d", a.Port)
 	h.Run(standard.New(fmt.Sprintf(":%d", a.Port)))
