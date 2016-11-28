@@ -1,4 +1,5 @@
 ---
+environment: development
 kubernetes:
   ca: example-ca
   api: localhost

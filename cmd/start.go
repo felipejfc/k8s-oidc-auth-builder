@@ -94,10 +94,10 @@ func loadConfiguration() {
 	kubeAPI = viper.GetString("kubernetes.api")
 	kubeCA = viper.GetString("kubernetes.ca")
 	apiVersion = viper.GetString("kubernetes.apiVersion")
+	environment = viper.GetString("environment")
 }
 
 func init() {
 	RootCmd.AddCommand(startCmd)
 	startCmd.Flags().IntVarP(&port, "port", "p", 8080, "The port that the API will bind to")
-	startCmd.Flags().StringVarP(&environment, "environment", "e", "staging", "The environment that the program will run")
 }
