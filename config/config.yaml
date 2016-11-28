@@ -1,2 +1,8 @@
 ---
-port: 8080
+kubernetes:
+  ca: example-ca
+  api: localhost
+  apiVersion: v1
+oidc:
+  clientId: example
+  clientSecret: example

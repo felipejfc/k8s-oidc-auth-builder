@@ -23,11 +23,14 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
+	"strings"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/felipejfc/k8s-oidc-auth-builder/api"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var port int
@@ -53,6 +56,7 @@ var startCmd = &cobra.Command{
 	Short: "Starts the api",
 	Long:  "Starts the api",
 	Run: func(cmd *cobra.Command, args []string) {
+		loadConfiguration()
 		configureLogger(Debug)
 		log.WithFields(log.Fields{
 			"clientID":     clientID,
@@ -74,13 +78,26 @@ var startCmd = &cobra.Command{
 	},
 }
 
+func loadConfiguration() {
+	viper.AutomaticEnv()
+	viper.SetConfigType("yaml")
+	viper.SetEnvPrefix("koh")
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	viper.AddConfigPath("./config")
+	viper.SetConfigName("config")
+	err := viper.ReadInConfig()
+	if err != nil {
+		panic(fmt.Errorf("Fatal error config file: %s \n", err))
+	}
+	clientID = viper.GetString("oidc.clientId")
+	clientSecret = viper.GetString("oidc.clientSecret")
+	kubeAPI = viper.GetString("kubernetes.api")
+	kubeCA = viper.GetString("kubernetes.ca")
+	apiVersion = viper.GetString("kubernetes.apiVersion")
+}
+
 func init() {
 	RootCmd.AddCommand(startCmd)
 	startCmd.Flags().IntVarP(&port, "port", "p", 8080, "The port that the API will bind to")
-	startCmd.Flags().StringVarP(&clientID, "clientID", "c", "", "The ClientID for the application")
-	startCmd.Flags().StringVarP(&clientSecret, "clientSecret", "s", "", "The Client Secret for the application")
-	startCmd.Flags().StringVarP(&kubeAPI, "kubeAPI", "k", "", "The kubernetes api address")
-	startCmd.Flags().StringVarP(&apiVersion, "apiVersion", "V", "v1", "The kubernetes api version")
-	startCmd.Flags().StringVarP(&kubeCA, "kubeCA", "a", "", "The kubernetes api certificate authority")
 	startCmd.Flags().StringVarP(&environment, "environment", "e", "staging", "The environment that the program will run")
 }
